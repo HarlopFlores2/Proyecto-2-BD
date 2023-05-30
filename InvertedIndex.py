@@ -40,6 +40,7 @@ class InvertedIndex:
         self.dataPath = dataPath
         self.indexPath = indexPath
         self.doc_lengths = {}
+        self.doc_norm = {}
         self.doc_frequency = defaultdict(int)
         self.term_frequency = defaultdict(lambda: defaultdict(int))
         self.stopwords = stopwords.words('english')
@@ -68,32 +69,52 @@ class InvertedIndex:
     def add_document(self, doc_id, document):
         terms = self.processText(document)
         self.doc_lengths[doc_id] = len(terms)
+        doc_norm_temp = 0
         for term in terms:
-            self.add_term(term, doc_id)
             self.term_frequency[term][doc_id] += 1
-
+            self.add_term(term, doc_id)
+            doc_norm_temp += self.tfidf_weight(term, doc_id) ** 2
+        
+        self.doc_norm[doc_id] = math.sqrt(doc_norm_temp)
     # tfdf_weight
-    def tfdf_weight(self, term, doc_id):
+    def tfidf_weight(self, term, doc_id):
         tf = self.term_frequency[term][doc_id]
         df = self.doc_frequency[term]
         idf = np.log(len(self.doc_lengths) / (1+df))
         return tf * idf
     
-    def cosine_similarity(self, query_vector, doc_vector):
-        dot_product = sum(query_vector[term] * doc_vector[term] for term in query_vector)
-        query_norm = math.sqrt(sum(value ** 2 for value in query_vector.values()))
-        document_norm = math.sqrt(sum(value ** 2 for value in doc_vector.values()))
+    def cosine_similarity(self, query_vector, doc_vector, doc_id):
+        dot_product = sum(query_vector[i] * doc_vector[i] for i in range(len(query_vector)))
+        query_norm = math.sqrt(sum(value ** 2 for value in query_vector))
+        document_norm = self.doc_norm[doc_id]
         if (query_norm * document_norm) == 0:
             return 0
         return dot_product / (query_norm * document_norm)
+    
+    def process_query(self, query, k):
+        query = self.processText(query)
+        query_vector = []
+        for term in query:
+            tf = query.count(term)
+            df = self.doc_frequency[term]
+            idf = np.log(len(self.doc_lengths) / (1+df))
+            query_vector.append(tf*idf)
 
+        scores = defaultdict(float)
+
+        for doc_id in self.doc_lengths:
+            doc_vector = []
+            for term in query:
+                doc_vector.append(self.tfidf_weight(term, doc_id))
+            scores[doc_id] = self.cosine_similarity(query_vector, doc_vector, doc_id)
+
+        return sorted(scores.items(), key=lambda item: item[1], reverse=True)[:k]
     
 
-    
 
-        
 
 invertedIndex = InvertedIndex(dirPath+'index.json', dirPath+'data.json')
 invertedIndex.add_document('1', 'This is a test')
 invertedIndex.add_document('2', 'This is another test')
-print(invertedIndex.index)
+process_query = invertedIndex.process_query('another test', 2)
+print(process_query)
