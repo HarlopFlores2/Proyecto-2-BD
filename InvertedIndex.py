@@ -22,20 +22,30 @@ def filterJson():
             id = objeto['id']
             abstract = objeto['abstract']
             datos_nuevos['data'][id] = abstract
-            if cont == 1000:
+            if cont == 10000:
                 break
 
     with open(dirPath+'data.json', 'w') as f:
-        json.dump(datos_nuevos, f, indent=4)
+        json.dump(datos_nuevos, f, indent = 4)
 
 
-#filterJson()
+filterJson()
+
+def init():
+    invertedIndex = InvertedIndex(dirPath+'index.json', dirPath+'data.json')
+    with open(dirPath+'data.json', 'r') as f:
+        data = json.load(f)
+        for doc_id in data['data']:
+            invertedIndex.add_document(doc_id, data['data'][doc_id])
+    with open(dirPath+'index.json', 'w') as f:
+        json.dump(invertedIndex.index, f, indent = 4)
+    return invertedIndex
 
 
 class InvertedIndex:
     def __init__(self, indexPath, dataPath, block_size=1000):
-        nltk.download('punkt')
-        nltk.download('stopwords')
+        #nltk.download('punkt')
+        #nltk.download('stopwords')
         self.index = defaultdict(list)
         self.dataPath = dataPath
         self.indexPath = indexPath
@@ -45,6 +55,9 @@ class InvertedIndex:
         self.term_frequency = defaultdict(lambda: defaultdict(int))
         self.stopwords = stopwords.words('english')
         self.stemmer = SnowballStemmer('english')
+
+    def get_dict_index(self):
+        return self.index
     # procesamiento de palabra
     def processWord(self, word):
         word = word.lower()
@@ -112,9 +125,10 @@ class InvertedIndex:
     
 
 
-
+'''
 invertedIndex = InvertedIndex(dirPath+'index.json', dirPath+'data.json')
 invertedIndex.add_document('1', 'This is a test')
 invertedIndex.add_document('2', 'This is another test')
 process_query = invertedIndex.process_query('another test', 2)
 print(process_query)
+'''
