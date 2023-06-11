@@ -2,18 +2,18 @@ from flask import Flask, render_template, request, redirect, url_for, Response
 
 import sys
 import os
+import time
 
-from InvertedIndex import *
+from spimi import *
 
-jsonPath = "C:/PROYECTO-2-BD/data/data_no_filter.json"
-dirPath = "C:/PROYECTO-2-BD/data/"
 
-#test
-#invertedIndex = InvertedIndex(dirPath+'index.json', dirPath+'data.json')
-#invertedIndex.add_document('0704.0001', 'This is a test')
-#invertedIndex.add_document('0704.0002', 'This is another test')
+projectPath = "C:/PROYECTO-2-BD/"
+dataPath = projectPath + "data/data.json"
 
-invertedIndex = init()
+documents = init(dataPath)
+
+spimi = SPIMI(100000)
+spimi.build_index(documents)
 
 
 app = Flask(__name__)
@@ -26,12 +26,17 @@ def buscador():
 
 @app.route('/resultados', methods=['POST', 'GET'])
 def resultados():
-    data = json.loads(open(dirPath + "data.json").read())
+    data = json.loads(open(dataPath).read())
     query = request.args.get('query')
     topK = int(request.args.get('topK'))
-    resultadostopK = invertedIndex.process_query(query, topK) 
-    print(resultadostopK)
-    return render_template('resultados.html', resultados=resultadostopK, data=data)
+    
+    start_time = time.time()
+
+    resultadostopK = spimi.process_query(query, topK) 
+    
+    elapsed_time = time.time() - start_time
+    print("Tiempo de ejecucion: %s segundos", elapsed_time)
+    return render_template('resultados.html', resultados=resultadostopK, data=data, elapsed_time=elapsed_time)
     
 
 if __name__ == '__main__':
