@@ -10,10 +10,8 @@ from spimi import *
 projectPath = "C:/PROYECTO-2-BD/"
 dataPath = projectPath + "data/data.json"
 
-documents = init(dataPath)
-
-spimi = SPIMI(100000)
-spimi.build_index(documents)
+spimi = SPIMI(10000000)
+spimi.build_index()
 
 
 app = Flask(__name__)

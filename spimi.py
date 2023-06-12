@@ -2,13 +2,6 @@ from InvertedIndex import *
 import sys
 import pickle
 
-def init(dataPath):
-    documents = []
-    with open(dataPath, 'r') as f:
-        data = json.load(f)
-        for doc_id in data['data']:
-            documents.append((doc_id, data['data'][doc_id]))
-    return documents
 
 class SPIMI:
     def __init__(self, block_size):
@@ -20,7 +13,7 @@ class SPIMI:
         self.blocks = []
         self.temp_dir = "temp_blocks"
         self.index_path = os.path.join("index", "index.pkl")
-        self.data_path = os.path.join("data", "data.json")
+        self.data_path = os.path.join("data")
         self.stopwords = stopwords.words('english') + stopwords.words('spanish')
         self.stemmer = SnowballStemmer('english')
 
@@ -45,18 +38,19 @@ class SPIMI:
         with open(self.index_path, "rb") as index_file:
             index = pickle.load(index_file)
         
-        with open(self.data_path, "rb") as data_file:
-            data = json.load(data_file)
+        for id in range(1,13):
+            with open(self.data_path + "/chunk_" + str(id) + ".json", "rb") as data_file:
+                data = json.load(data_file)
 
-        for doc_id in self.doc_lengths:
-            doc_norm = 0
-            terms = self.processText(data["data"][doc_id])
-            for term in terms:
-                tf = self.term_frequency[term][doc_id]
-                idf = math.log(len(self.doc_lengths) / len(index[term]))
-                doc_norm += (tf * idf) ** 2
+            for doc_id in self.doc_lengths:
+                doc_norm = 0
+                terms = self.processText(data[doc_id])
+                for term in terms:
+                    tf = self.term_frequency[term][doc_id]
+                    idf = math.log(len(self.doc_lengths) / len(index[term]))
+                    doc_norm += (tf * idf) ** 2
 
-            self.doc_norm[doc_id] = math.sqrt(doc_norm)
+                self.doc_norm[doc_id] = math.sqrt(doc_norm)
         
     def add_document(self, doc_id, document):
         terms = self.processText(document)
@@ -69,12 +63,17 @@ class SPIMI:
             else:
                 self.block_dict_temp[term].append(doc_id)
 
-    def build_index(self, documents):
+    def build_index(self):
         os.makedirs(self.temp_dir, exist_ok=True)
-        for doc_id, document in documents:
-            self.add_document(doc_id, document)
-            if sys.getsizeof(self.block_dict_temp) > self.block_size:
-                self.flush_block()
+
+        for id in range(1,13):
+            with open(self.data_path + "/chunk_" + str(id) + ".json", "rb") as data_file:
+                documents = json.load(data_file)
+
+            for doc_id in documents.keys():
+                self.add_document(doc_id, documents[doc_id])
+                if sys.getsizeof(self.block_dict_temp) > self.block_size:
+                    self.flush_block()
         self.flush_block()
         self.merge_blocks()
         self.calculate_doc_norm()
