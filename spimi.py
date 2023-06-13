@@ -1,6 +1,13 @@
-from InvertedIndex import *	
+import math
 import sys
 import pickle
+import os
+import json
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
+from collections import defaultdict
+import re
 
 
 class SPIMI:
@@ -12,8 +19,9 @@ class SPIMI:
         self.term_frequency = defaultdict(lambda: defaultdict(int))
         self.blocks = []
         self.temp_dir = "temp_blocks"
-        self.index_path = os.path.join("index", "index.pkl")
+        self.index_path = os.path.join("index")
         self.data_path = os.path.join("data")
+        self.data = json.load(open(os.path.join(self.data_path, "data.json"), "rb"))
         self.stopwords = stopwords.words('english') + stopwords.words('spanish')
         self.stemmer = SnowballStemmer('english')
 
@@ -33,9 +41,9 @@ class SPIMI:
         tokens = [self.processWord(word) for word in tokens]
         tokens = [word for word in tokens if word is not None]
         return tokens
-    
+    '''
     def calculate_doc_norm(self):
-        with open(self.index_path, "rb") as index_file:
+        with open(self.index_path + "/index.pkl", "rb") as index_file:
             index = pickle.load(index_file)
         
         for id in range(1,13):
@@ -51,7 +59,7 @@ class SPIMI:
                     doc_norm += (tf * idf) ** 2
 
                 self.doc_norm[doc_id] = math.sqrt(doc_norm)
-        
+    '''
     def add_document(self, doc_id, document):
         terms = self.processText(document)
         self.doc_lengths[doc_id] = len(terms)
@@ -113,7 +121,7 @@ class SPIMI:
             while j < len(terms2):
                 merged_block[terms2[j]] = term_dict2[terms2[j]]
                 j += 1
-        os.remove(block2) 
+        #os.remove(block2) 
         return merged_block
 
 
@@ -126,29 +134,31 @@ class SPIMI:
                     term_dict1 = pickle.load(block_file)
                     merged_blocks = term_dict1
                 
-                os.remove(self.blocks[i])
+                #os.remove(self.blocks[i])
             else:
                 merged_blocks = self.merge_two_blocks(terms1, term_dict1, self.blocks[i])
                 terms1 = list(merged_blocks.keys())
                 term_dict1 = merged_blocks
             
-        
-        with open(self.index_path, "wb") as index_file:
+        os.makedirs(self.index_path, exist_ok=True)
+
+        with open(self.index_path + "/index.pkl", "wb") as index_file:
             pickle.dump(merged_blocks, index_file)
 
         return merged_blocks
         
-    def cosine_similarity(self, query_vector, doc_vector, doc_id):
+    def cosine_similarity(self, query_vector, doc_vector):
         dot_product = sum(query_vector[i] * doc_vector[i] for i in range(len(query_vector)))
         query_norm = math.sqrt(sum(value ** 2 for value in query_vector))
-        document_norm = self.doc_norm[doc_id]
+        document_norm = math.sqrt(sum(value ** 2 for value in doc_vector))
 
         if (query_norm * document_norm) == 0:
             return 0
         return dot_product / (query_norm * document_norm)
     
     def process_query(self, query, k):
-        index = open(self.index_path, "rb")
+        index = open(self.index_path + "/index.pkl", "rb")
+        index = pickle.load(index)
         query = self.processText(query)
         query_vector = []
         for term in query:
@@ -159,23 +169,24 @@ class SPIMI:
             else:
                 df = len(index[term])
 
-            idf = math.log(len(self.doc_lengths)/(1+df), 4)
+            idf = math.log(len(self.data.keys())/(1+df), 4)
             query_vector.append(tf*idf)
 
         scores = defaultdict(float)
 
-        for doc_id in self.doc_lengths:
+        docs = set()
+        for term in query:
+            for doc_id in index[term]:
+                docs.add(doc_id)
+        
+        for doc_id in docs:
             doc_vector = []
             for term in query:
-                tf = self.term_frequency[term][doc_id]
-                if term not in index:
-                    df = 0
-                else:
-                    df = len(index[term])
-                idf = math.log(len(self.doc_lengths)/(df+1), 4)
+                tf = self.data[doc_id].count(term)
+                df = len(index[term])
+                idf = math.log(len(self.data.keys())/(1+df), 4)
                 doc_vector.append(tf*idf)
-
-            scores[doc_id] = self.cosine_similarity(query_vector, doc_vector, doc_id)
+            scores[doc_id] = self.cosine_similarity(query_vector, doc_vector)
 
         return sorted(scores.items(), key=lambda item: item[1], reverse=True)[:k]
 

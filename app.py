@@ -7,11 +7,9 @@ import time
 from spimi import *
 
 
-projectPath = "C:/PROYECTO-2-BD/"
-dataPath = projectPath + "data/data.json"
 
 spimi = SPIMI(10000000)
-spimi.build_index()
+#spimi.build_index()
 
 
 app = Flask(__name__)
@@ -24,7 +22,7 @@ def buscador():
 
 @app.route('/resultados', methods=['POST', 'GET'])
 def resultados():
-    data = json.loads(open(dataPath).read())
+    data = spimi.data
     query = request.args.get('query')
     topK = int(request.args.get('topK'))
     

@@ -17,7 +17,7 @@
                 {% for resultado in resultados %}
                 <tr>
                     <td>{{resultado[0]}}</td>
-                    <td>{{data['data'][resultado[0]]}}</td>
+                    <td>{{data[resultado[0]]}}</td>
                     <td>{{resultado[1]}}</td>
                 </tr>
                 {% set number.value = number.value + 1 %}
