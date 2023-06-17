@@ -1,13 +1,14 @@
-import math
-import sys
-import pickle
-import os
 import json
+import math
+import os
+import pickle
+import re
+import sys
+from collections import defaultdict
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
-from collections import defaultdict
-import re
 
 
 class SPIMI:
