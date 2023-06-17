@@ -15,7 +15,7 @@ from nltk.stem.snowball import SnowballStemmer
 stemmer = SnowballStemmer("english")
 
 
-def processText(stop_words, text):
+def tokens_for_text(stop_words, text):
     return (
         stemmer.stem(w)
         for w in (w.casefold() for w in nltk.word_tokenize(text))
