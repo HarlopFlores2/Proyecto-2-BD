@@ -4,6 +4,7 @@ import os
 import pickle
 import re
 import sys
+import itertools
 from collections import defaultdict
 
 import nltk
@@ -20,7 +21,8 @@ class SPIMI:
         self.index_path = os.path.join("index")
         self.data_path = os.path.join("data")
         self.data = json.load(open(os.path.join(self.data_path, "data.json"), "rb"))
-        self.stopwords = stopwords.words("english") + stopwords.words("spanish")
+
+        self.stopwords = set(itertools.chain(stopwords.words("english"), stopwords.words("spanish")))
         self.stemmer = SnowballStemmer("english")
 
     def processWord(self, word):
