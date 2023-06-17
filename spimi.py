@@ -12,6 +12,17 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 
 
+stemmer = SnowballStemmer("english")
+
+
+def processText(stop_words, text):
+    return (
+        stemmer.stem(w)
+        for w in (w.casefold() for w in nltk.word_tokenize(text))
+        if w not in stop_words
+    )
+
+
 class SPIMI:
     def __init__(self, block_size):
         self.block_size = block_size
@@ -23,23 +34,6 @@ class SPIMI:
         self.data = json.load(open(os.path.join(self.data_path, "data.json"), "rb"))
 
         self.stopwords = set(itertools.chain(stopwords.words("english"), stopwords.words("spanish")))
-        self.stemmer = SnowballStemmer("english")
-
-    def processWord(self, word):
-        word = word.lower()
-        if word in self.stopwords:
-            return None
-        word = self.stemmer.stem(word)
-        return word
-
-    def processText(self, text):
-        text = re.sub(r"\d+", "", text)
-        text = re.sub(r"[^\w\s]", "", text)
-        text = re.sub(r"\b\w{1,2}\b", "", text)
-        tokens = nltk.word_tokenize(text)
-        tokens = [self.processWord(word) for word in tokens]
-        tokens = [word for word in tokens if word is not None]
-        return tokens
 
     def add_document(self, doc_id, document):
         terms = self.processText(document)
