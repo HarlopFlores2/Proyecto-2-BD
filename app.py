@@ -1,14 +1,13 @@
+import os
+import sys
+import time
+
+import nltk
 from flask import Flask, render_template, request
-from database import connector
 from sqlalchemy import text
 
-import sys
-import os
-import time
-import nltk
-
+from database import connector
 from spimi import *
-
 
 # Comentar si ya esta instalado.
 # -----------
