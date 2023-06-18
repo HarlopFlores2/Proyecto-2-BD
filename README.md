@@ -7,25 +7,43 @@ Este proyecto tiene como objetivo entender y aplicar algoritmos de búsqueda y r
 Se utilizó el siguiente dataset: [arXiv Dataset](https://www.kaggle.com/datasets/Cornell-University/arxiv).
 
 ## Backend: Implementación del Índice Invertido
-En esta sección, describimos cómo se implementa el índice invertido para la recuperación de texto.
 
 ### Preprocesamiento
-El preprocesamiento de los datos es un paso crucial en la recuperación de información. Los siguientes pasos se llevan a cabo en esta fase:
-- **Tokenización**: En esta fase, el texto se divide en palabras o términos. Este proceso es esencial para la construcción del índice invertido.
-- **Filtrar Stopwords**: Las palabras comunes como 'y', 'o', 'el', 'la', etc., que no contribuyen significativamente a la búsqueda, se eliminan.
-- **Reducción de palabras (Stemming)**: Las palabras se reducen a su raíz o forma base, lo que ayuda a mejorar la relevancia de la búsqueda. Por ejemplo, "corriendo" se convierte en "correr".
+
+El preprocesamiento es la etapa en la que se preparan los datos para la indexación. Esto incluye:
+
+- **Tokenización**: Se descompone el texto en palabras o tokens utilizando la librería `nltk`. Los tokens son generados a partir del texto y son validados usando la función `word_valid` en `spimi.py`.
+
+- **Filtrado de Stop Words**: Se eliminan las palabras comunes (por ejemplo, "y", "o", "el", "la") que no tienen valor significativo en la búsqueda. Esto se logra mediante el uso de un conjunto de stop words en inglés y español proporcionado por `nltk`.
+
+- **Stemming**: Se aplica un proceso de stemming utilizando el Snowball Stemmer de `nltk`. Esto convierte palabras a su raíz común (por ejemplo, "corriendo" se convierte en "correr"). Se utiliza la función `stem` en `spimi.py`.
 
 ### Construcción del Índice
-En esta etapa, se construye el índice invertido utilizando el preprocesamiento realizado:
-- **Estructurar el índice invertido**: Se guarda información sobre los pesos TF-IDF (Frecuencia de Término - Frecuencia Inversa de Documento) de cada término en los documentos.
-- **Cálculo de la longitud de cada documento**: Se calcula la longitud de cada documento y se reutiliza para calcular la similitud del coseno.
-- **Construcción del índice en memoria secundaria**: Se utiliza el algoritmo Single-pass in-memory indexing (SPIMI) para la construcción del índice en memoria secundaria. Esto implica leer bloques de documentos, procesarlos y escribir bloques de índice parciales en el disco.
 
-### Consulta
-En esta etapa, se describen los pasos para procesar y recuperar documentos utilizando el índice invertido:
-- **Procesamiento de la consulta**: Similar al preprocesamiento de documentos, la consulta se tokeniza, se filtran las stopwords y se aplica stemming.
-- **Scoring y ranking**: Se utiliza la similitud de coseno para calcular un puntaje de relevancia para cada documento en relación con la consulta, y luego se clasifican los documentos según este puntaje.
-- **Recuperación de documentos**: Finalmente, se devuelve una lista ordenada de documentos relevantes.
+- **Generación de Frecuencias de Términos**: Se utiliza un defaultdict para almacenar las frecuencias de términos por documento. Esto se realiza en la función `build_index` dentro de `spimi.py`.
+
+- **Manejo de Memoria Secundaria**: Durante la construcción del índice, los bloques de índice se escriben en el disco una vez que alcanzan un tamaño máximo definido por `max_bytes_per_block`. Esto se hace para evitar el agotamiento de la memoria principal. Los bloques son escritos en un directorio llamado `blocks` y se utilizan archivos `.blk` para almacenar los bloques de índice.
+
+- **Fusión de Bloques**: Una vez que todos los bloques de índice se han escrito en el disco, se fusionan en un solo índice invertido. Esto se realiza mediante las funciones `merge_blocks_in_dir` y `merge_blocks` en `spimi.py`.
+
+- **Cálculo de IDF y Normas**: Se calculan los valores IDF (Frecuencia Inversa de Documento) y las normas para cada documento. Esto se hace utilizando las funciones `idfs_for_index` y `norms_for_index` en `spimi.py`.
+
+### Ejecución Óptima de Consultas
+
+- **Recuperación de Documentos**: Se realiza una consulta mediante la clase `Query` en `spimi.py`, la cual se encarga de recuperar los documentos relevantes utilizando el índice invertido construido.
+
+- **Rankeo de Documentos**: Los documentos se rankean de acuerdo con la similitud del coseno entre el vector de consulta y los vectores de los documentos. Esto se calcula en la función `query` dentro de la clase `Query` en `spimi.py`.
+
+
+## Aplicación Web
+
+La aplicación web utiliza `Flask` para exponer un servidor web en el que los usuarios pueden interactuar con el sistema de recuperación de texto. Esta interfaz permite a los usuarios ingresar consultas y ver los documentos recuperados.
+
+- **Inicialización del Servidor:** El servidor `Flask` es inicializado por el archivo `app.py`. Este archivo también define las rutas para diferentes funcionalidades de la aplicación web.
+
+- **Interfaz de Usuario:** La interfaz de usuario está construida con `HTML` y permite a los usuarios ingresar consultas en un cuadro de búsqueda. Los resultados son mostrados en la misma página web.
+
+- **Comunicación entre Backend y Frontend:** Cuando un usuario ingresa una consulta, la aplicación web envía esta consulta al backend a través de una llamada `HTTP`. El backend procesa la consulta utilizando el índice invertido y devuelve los documentos recuperados a la interfaz de usuario para su visualización.
 
 ## Frontend: Full-Text Search
 
