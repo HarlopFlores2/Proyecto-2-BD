@@ -77,7 +77,8 @@ class SPIMI:
                     ),
                     key=lambda t: t[0],
                 )
-                pickle.dump(block, fp)
+                for e in block:
+                    pickle.dump(e, fp)
 
         with open(filename, "r") as fp:
             for i, line in enumerate(fp):
