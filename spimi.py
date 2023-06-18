@@ -8,7 +8,7 @@ import os
 import pickle
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 import nltk
 from nltk.corpus import stopwords
@@ -203,48 +203,47 @@ def build_index(filename, stop_words):
     return term_frequencies
 
 
-class SPIMI:
-    def __init__(self, block_size):
-        self.block_size = block_size
-        self.block_dict_temp = {}
-        self.blocks = []
-        self.temp_dir = "temp_blocks"
-        self.index_path = os.path.join("index")
-        self.data_path = os.path.join("data")
-        self.data = json.load(open(os.path.join(self.data_path, "data.json"), "rb"))
+class Query:
+    __slots__ = "index_file", "offsets", "idfs", "norms"
 
-        self.stopwords = set(itertools.chain(stopwords.words("english"), stopwords.words("spanish")))
+    def __init__(self, index_file, offsets, idfs, norms):
+        self.index_file = index_file
+        self.offsets = offsets
+        self.idfs = idfs
+        self.norms = norms
 
-    def process_query(self, query, k):
-        index = open(self.index_path + "/index.pkl", "rb")
-        index = pickle.load(index)
-        query = self.processText(query)
+    def query(self, query, top_k):
+        query_count = Counter(tokens_for_text(query, stop_words))
+        query_count = list(query_count.items())
+
         query_vector = []
-        for term in query:
-            tf = query.count(term)
-            # comprobar si el termino esta en el indice
-            if term not in index:
-                df = 0
-            else:
-                df = len(index[term])
+        documents_vectors = defaultdict(dict)
 
-            idf = math.log(len(self.data.keys()) / (1 + df), 4)
-            query_vector.append(tf * idf)
+        for (i, (token, count)) in enumerate(query_count):
+            if token in self.offsets:
+                [_, token_tfs] = util.unpickle_file_at_offset(
+                    self.index_file, self.offsets[token]
+                )
+                for doc_id, tf in token_tfs.items():
+                    documents_vectors[doc_id][i] = math.log(tf + 1) * self.idfs[token]
 
-        scores = defaultdict(float)
+                query_vector.append(count)
 
-        docs = set()
-        for term in query:
-            for doc_id in index[term]:
-                docs.add(doc_id)
+        def default_dict_to_vector(dd, size):
+            ret = []
+            for i in range(size):
+                ret.append(dd.get(i, 0))
+            return ret
 
-        for doc_id in docs:
-            doc_vector = []
-            for term in query:
-                tf = self.data[doc_id].count(term)
-                df = len(index[term])
-                idf = math.log(len(self.data.keys()) / (1 + df), 4)
-                doc_vector.append(tf * idf)
-            scores[doc_id] = self.cosine_similarity(query_vector, doc_vector)
+        documents_scores = [
+            (
+                doc_id,
+                dot_product(
+                    default_dict_to_vector(doc_vector, len(query_vector)), query_vector
+                )
+                / self.norms[doc_id],
+            )
+            for doc_id, doc_vector in documents_vectors.items()
+        ]
 
-        return sorted(scores.items(), key=lambda item: item[1], reverse=True)[:k]
+        return sorted(documents_scores, key=lambda e: e[1], reverse=True)[:top_k]
