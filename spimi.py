@@ -142,6 +142,12 @@ def merge_blocks(result_filename, blocks_filenames):
         pickle.dump((first_token, first_tfs), fp)
 
 
+def dot_product(v1, v2):
+    if len(v1) != len(v2):
+        raise RuntimeError("Vectors don't have the same length.")
+    return sum(n1 * n2 for n1, n2 in zip(v1, v2))
+
+
 class SPIMI:
     def __init__(self, block_size):
         self.block_size = block_size
@@ -217,17 +223,6 @@ class SPIMI:
             )
 
         return term_frequencies
-
-    def cosine_similarity(self, query_vector, doc_vector):
-        dot_product = sum(
-            query_vector[i] * doc_vector[i] for i in range(len(query_vector))
-        )
-        query_norm = math.sqrt(sum(value**2 for value in query_vector))
-        document_norm = math.sqrt(sum(value**2 for value in doc_vector))
-
-        if (query_norm * document_norm) == 0:
-            return 0
-        return dot_product / (query_norm * document_norm)
 
     def process_query(self, query, k):
         index = open(self.index_path + "/index.pkl", "rb")
