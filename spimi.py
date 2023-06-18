@@ -53,6 +53,22 @@ def create_offsets_for_index(offsets_filename, index_filename):
     return token_offsets
 
 
+def idfs_for_index(total_documents, index_filename):
+    idf_s = dict()
+
+    with open(index_filename, "rb") as index_fp:
+        while True:
+            try:
+                (token, tf_s) = pickle.load(index_fp)
+            except EOFError:
+                break
+
+            assert total_documents >= len(tf_s)
+            idf_s[token] = math.log((total_documents + 1) / (len(tf_s) + 1))
+
+    return idf_s
+
+
 def merge_blocks_in_dir(result_filename, directory):
     blocks_filenames = glob.glob(os.path.join(directory, "*.blk"))
     merge_blocks(result_filename, blocks_filenames)
