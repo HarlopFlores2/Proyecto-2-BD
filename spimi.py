@@ -96,10 +96,10 @@ class SPIMI:
 
                             write_term_frequencies(term_frequencies, block_filename)
 
-                            n_tuples = 0
                             term_frequencies.clear()
-                        else:
-                            n_tuples += 1
+                            n_tuples = 0
+
+                        n_tuples += 1
 
                     term_frequencies[t][i] += 1
 
