@@ -1,4 +1,6 @@
 import functools
+import glob
+import heapq
 import itertools
 import json
 import math
@@ -32,6 +34,61 @@ def tokens_for_text(text, stop_words=set()):
         for w in (w.casefold() for w in nltk.word_tokenize(text) if word_valid(w))
         if w not in stop_words
     )
+
+
+def merge_blocks_in_dir(result_filename, directory):
+    blocks_filenames = glob.glob(os.path.join(directory, "*.blk"))
+    merge_blocks(result_filename, blocks_filenames)
+
+
+def merge_blocks(result_filename, blocks_filenames):
+    blocks_fps = [open(bf, "rb") for bf in blocks_filenames]
+
+    blocks = []
+    for i, bfp in enumerate(blocks_fps):
+        try:
+            e = pickle.load(bfp)
+            # This is necessary for the heap to work
+            blocks.append((e[0], i, e[1]))
+        except EOFError:
+            blocks_fps[i] = None
+    heapq.heapify(blocks)
+
+    def advance_token_entries_in_order():
+        if len(blocks) == 0:
+            return
+
+        (token, index, tfs) = heapq.heappop(blocks)
+
+        try:
+            e = pickle.load(blocks_fps[index])
+            heapq.heappush(blocks, (e[0], index, e[1]))
+        except EOFError:
+            pass
+
+        return (token, tfs)
+
+    it = itertools.takewhile(
+        lambda e: e is not None,
+        (advance_token_entries_in_order() for _ in itertools.count()),
+    )
+
+    def merge_tfs(tfs_1: dict, tfs_2: dict):
+        """Add the entries in tfs_2 to tfs_1."""
+        for doc_id, count in tfs_2.items():
+            tfs_1[doc_id] = tfs_1.get(doc_id, 0) + count
+
+    # We assume there is at least one entry
+    first_token, first_tfs = next(it)
+    with open(result_filename, "wb") as fp:
+        for token, tfs in it:
+            if token == first_token:
+                merge_tfs(first_tfs, tfs)
+            else:
+                pickle.dump((first_token, first_tfs), fp)
+                first_token, first_tfs = token, tfs
+
+        pickle.dump((first_token, first_tfs), fp)
 
 
 class SPIMI:
