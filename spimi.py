@@ -14,9 +14,6 @@ class SPIMI:
     def __init__(self, block_size):
         self.block_size = block_size
         self.block_dict_temp = {}
-        self.doc_lengths = {}
-        self.doc_norm = {}
-        self.term_frequency = defaultdict(lambda: defaultdict(int))
         self.blocks = []
         self.temp_dir = "temp_blocks"
         self.index_path = os.path.join("index")
@@ -35,37 +32,15 @@ class SPIMI:
     def processText(self, text):
         text = re.sub(r'\d+', '', text)
         text = re.sub(r'[^\w\s]', '', text)
-        text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
         text = re.sub(r'\b\w{1,2}\b', '', text)
         tokens = nltk.word_tokenize(text)
         tokens = [self.processWord(word) for word in tokens]
         tokens = [word for word in tokens if word is not None]
         return tokens
-    '''
-    def calculate_doc_norm(self):
-        with open(self.index_path + "/index.pkl", "rb") as index_file:
-            index = pickle.load(index_file)
-        
-        for id in range(1,13):
-            with open(self.data_path + "/chunk_" + str(id) + ".json", "rb") as data_file:
-                data = json.load(data_file)
 
-            for doc_id in self.doc_lengths:
-                doc_norm = 0
-                terms = self.processText(data[doc_id])
-                for term in terms:
-                    tf = self.term_frequency[term][doc_id]
-                    idf = math.log(len(self.doc_lengths) / len(index[term]))
-                    doc_norm += (tf * idf) ** 2
-
-                self.doc_norm[doc_id] = math.sqrt(doc_norm)
-    '''
     def add_document(self, doc_id, document):
         terms = self.processText(document)
-        self.doc_lengths[doc_id] = len(terms)
-        self.doc_norm[doc_id] = 0
         for term in terms:
-            self.term_frequency[term][doc_id] += 1
             if term not in self.block_dict_temp:
                 self.block_dict_temp[term] = [doc_id]
             else:
@@ -74,17 +49,15 @@ class SPIMI:
     def build_index(self):
         os.makedirs(self.temp_dir, exist_ok=True)
 
-        for id in range(1,13):
-            with open(self.data_path + "/chunk_" + str(id) + ".json", "rb") as data_file:
-                documents = json.load(data_file)
+        with open(os.path.join(self.data_path, "data.json"), "rb") as data_file:
+            documents = json.load(data_file)
 
-            for doc_id in documents.keys():
-                self.add_document(doc_id, documents[doc_id])
-                if sys.getsizeof(self.block_dict_temp) > self.block_size:
-                    self.flush_block()
+        for doc_id in documents.keys():
+            self.add_document(doc_id, documents[doc_id])
+            if sys.getsizeof(self.block_dict_temp) > self.block_size:
+                self.flush_block()
         self.flush_block()
         self.merge_blocks()
-        self.calculate_doc_norm()
         
     
     def flush_block(self):
