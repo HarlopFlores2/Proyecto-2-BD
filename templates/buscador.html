@@ -2,17 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Test</title>
+    <title>Buscador de Documentos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <form action="{{ url_for('resultados') }}">
-        <input type="text" name="query" placeholder="{{consulta}}" id="query">
-        <input type="text" name="topK" placeholder="{{consulta}}" id="topK">
-        <input type="submit" value="Buscar" id="btn">
-    </form>
-    <p class="description">
-        Base de Datos II
-    </p>
-
+    <div class="container">
+        <h1>Buscador de Documentos</h1>
+        <form action="{{ url_for('resultados') }}" class="search-form">
+            <div class="input-group">
+                <label for="query">Consulta:</label>
+                <input type="text" name="query" placeholder="Ingresa tu consulta" id="query" required>
+            </div>
+            <div class="input-group">
+                <label for="topK">Top K:</label>
+                <input type="number" name="topK" placeholder="Número de resultados" id="topK" min="1" required>
+            </div>
+            <div class="input-group">
+                <input type="submit" value="Buscar">
+            </div>
+        </form>
+        <p class="description">
+            Proyecto 2 - Base de Datos II
+        </p>
+    </div>
 </body>
 </html>
