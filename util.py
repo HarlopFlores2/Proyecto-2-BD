@@ -1,3 +1,4 @@
+import json
 import pickle
 from collections.abc import Container, Mapping
 from sys import getsizeof
