@@ -215,14 +215,6 @@ class SPIMI:
 
         self.stopwords = set(itertools.chain(stopwords.words("english"), stopwords.words("spanish")))
 
-    def add_document(self, doc_id, document):
-        terms = self.processText(document)
-        for term in terms:
-            if term not in self.block_dict_temp:
-                self.block_dict_temp[term] = [doc_id]
-            else:
-                self.block_dict_temp[term].append(doc_id)
-
     def process_query(self, query, k):
         index = open(self.index_path + "/index.pkl", "rb")
         index = pickle.load(index)
