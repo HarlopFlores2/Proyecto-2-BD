@@ -6,8 +6,6 @@ import json
 import math
 import os
 import pickle
-import re
-import sys
 from collections import Counter, defaultdict
 
 import nltk
