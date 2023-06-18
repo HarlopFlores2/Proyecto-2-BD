@@ -20,13 +20,14 @@
             <th>SCORE</th>
         </tr>
         {% for resultado in resultados_spimi %}
+        {% set abstract = read_json_at_offset(json_offsets[resultado[0]], json_file)['abstract'] %}
         <tr>
             <td>{{resultado[0]}}</td>
             <td class="abstract">
                 <div class="abstract-preview">
-                    {{data[resultado[0]][:100]}}...
+                    {{abstract[:100]}}...
                 </div>
-                <a href="javascript:void(0);" class="toggle-abstract" data-abstract="{{data[resultado[0]]}}">Ver más</a>
+                <a href="javascript:void(0);" class="toggle-abstract" data-abstract="{{abstract}}">Ver más</a>
             </td>
             <td>{{resultado[1]}}</td>
         </tr>

@@ -6,8 +6,9 @@ import nltk
 from flask import Flask, render_template, request
 from sqlalchemy import text
 
+import spimi
 from database import connector
-from spimi import *
+from util import read_json_at_offset, unpickle_file
 
 # Comentar si ya esta instalado.
 # -----------
@@ -15,12 +16,17 @@ nltk.download("punkt")
 nltk.download("stopwords")
 # -----------
 
+json_offsets = unpickle_file("json_offsets.ind")
 
 db = connector.Manager()
 engine = db.createEngine()
 
-spimi = SPIMI(10000000)
-# spimi.build_index()
+query = spimi.Query(
+    "index.ind",
+    unpickle_file("offsets.ind"),
+    unpickle_file("idfs.ind"),
+    unpickle_file("norms.ind"),
+)
 
 app = Flask(__name__)
 
@@ -32,13 +38,12 @@ def buscador():
 
 @app.route("/resultados", methods=["POST", "GET"])
 def resultados():
-    data = spimi.data
-    query = request.args.get("query")
+    q = request.args.get("query")
     topK = int(request.args.get("topK"))
 
     # Resultados de SPIMI
     start_time = time.time()
-    resultados_spimi = spimi.process_query(query, topK)
+    resultados_spimi = query.query(q, topK)
     elapsed_time_spimi = time.time() - start_time
 
     # Resultados de PostgreSQL
@@ -62,9 +67,11 @@ def resultados():
         "resultados.html",
         resultados_spimi=resultados_spimi,
         resultados_sql=resultados_sql,
-        data=data,
         elapsed_time_spimi=elapsed_time_spimi,
         elapsed_time_sql=elapsed_time_sql,
+        json_offsets=json_offsets,
+        json_file='arxiv-metadata-oai-snapshot.json',
+        read_json_at_offset=read_json_at_offset,
     )
 
 
