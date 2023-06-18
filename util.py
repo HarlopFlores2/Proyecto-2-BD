@@ -19,6 +19,12 @@ def unpickle_file_at_offset(filename, offset):
         return pickle.load(fp)
 
 
+def read_json_at_offset(offset, json_filename):
+    with open(json_filename, "rb") as fp:
+        fp.seek(offset, 0)
+        return json.loads(fp.readline())
+
+
 # Based on:
 # https://code.tutsplus.com/tutorials/understand-how-much-memory-your-python-objects-use--cms-25609
 def deep_getsizeof(o, ids=set()):
