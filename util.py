@@ -3,6 +3,11 @@ from collections.abc import Container, Mapping
 from sys import getsizeof
 
 
+def pickle_to_file(obj, filename):
+    with open(filename, "wb") as fp:
+        pickle.dump(obj, fp)
+
+
 def unpickle_file(filename):
     with open(filename, "rb") as fp:
         return pickle.load(fp)
