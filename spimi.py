@@ -148,6 +148,61 @@ def dot_product(v1, v2):
     return sum(n1 * n2 for n1, n2 in zip(v1, v2))
 
 
+def build_index(filename, stop_words):
+    # Getting the complete size of the dictionary is expensive, so we
+    # estimate it by the total count of entries for each token
+    n_tuples = 0
+    max_bytes_per_block = 500_000_000
+    bytes_per_tuple = (
+        55  # This is an approximation made by running with some example data
+    )
+    max_tuples_per_block = max_bytes_per_block // bytes_per_tuple
+    n_blocks = 0
+
+    term_frequencies = defaultdict(lambda: defaultdict(int))
+
+    os.makedirs("blocks", exist_ok=True)
+
+    def gen_filename_for_block_file(i):
+        return os.path.join("blocks", f"b{i}.blk")
+
+    def write_term_frequencies(term_frequencies, filename):
+        with open(filename, "wb") as fp:
+            block = sorted(
+                (
+                    (token, dict(docs_dict))
+                    for token, docs_dict in term_frequencies.items()
+                ),
+                key=lambda t: t[0],
+            )
+            for e in block:
+                pickle.dump(e, fp)
+
+    with open(filename, "r") as fp:
+        for i, line in enumerate(fp):
+            j = json.loads(line)
+            abstract = j["abstract"]
+            for t in tokens_for_text(abstract, stop_words):
+                if t not in term_frequencies or i not in term_frequencies[t]:
+                    if n_tuples == max_tuples_per_block:
+                        block_filename = gen_filename_for_block_file(n_blocks)
+                        n_blocks += 1
+
+                        write_term_frequencies(term_frequencies, block_filename)
+
+                        term_frequencies.clear()
+                        n_tuples = 0
+
+                    n_tuples += 1
+
+                term_frequencies[t][i] += 1
+
+    if len(term_frequencies) != 0:
+        write_term_frequencies(term_frequencies, gen_filename_for_block_file(n_blocks))
+
+    return term_frequencies
+
+
 class SPIMI:
     def __init__(self, block_size):
         self.block_size = block_size
@@ -167,62 +222,6 @@ class SPIMI:
                 self.block_dict_temp[term] = [doc_id]
             else:
                 self.block_dict_temp[term].append(doc_id)
-
-    def build_index(self, filename):
-        # Getting the complete size of the dictionary is expensive, so we
-        # estimate it by the total count of entries for each token
-        n_tuples = 0
-        max_bytes_per_block = 500_000_000
-        bytes_per_tuple = (
-            55  # This is an approximation made by running with some example data
-        )
-        max_tuples_per_block = max_bytes_per_block // bytes_per_tuple
-        n_blocks = 0
-
-        term_frequencies = defaultdict(lambda: defaultdict(int))
-
-        os.makedirs("blocks", exist_ok=True)
-
-        def gen_filename_for_block_file(i):
-            return os.path.join("blocks", f"b{i}.blk")
-
-        def write_term_frequencies(term_frequencies, filename):
-            with open(filename, "wb") as fp:
-                block = sorted(
-                    (
-                        (token, dict(docs_dict))
-                        for token, docs_dict in term_frequencies.items()
-                    ),
-                    key=lambda t: t[0],
-                )
-                for e in block:
-                    pickle.dump(e, fp)
-
-        with open(filename, "r") as fp:
-            for i, line in enumerate(fp):
-                j = json.loads(line)
-                abstract = j["abstract"]
-                for t in tokens_for_text(abstract, self.stop_words):
-                    if t not in term_frequencies or i not in term_frequencies[t]:
-                        if n_tuples == max_tuples_per_block:
-                            block_filename = gen_filename_for_block_file(n_blocks)
-                            n_blocks += 1
-
-                            write_term_frequencies(term_frequencies, block_filename)
-
-                            term_frequencies.clear()
-                            n_tuples = 0
-
-                        n_tuples += 1
-
-                    term_frequencies[t][i] += 1
-
-        if len(term_frequencies) != 0:
-            write_term_frequencies(
-                term_frequencies, gen_filename_for_block_file(n_blocks)
-            )
-
-        return term_frequencies
 
     def process_query(self, query, k):
         index = open(self.index_path + "/index.pkl", "rb")
