@@ -54,3 +54,20 @@ def deep_getsizeof(o, ids=set()):
         return r + sum(d(x, ids) for x in o)
 
     return r
+
+
+# Based on _Serge Ballesta_'s answer:
+# https://stackoverflow.com/questions/46408568#46408568
+class SizedReader:
+    def __init__(self, fd, encoding="utf-8"):
+        self.fd = fd
+        self.size = 0
+        self.encoding = encoding
+
+    def __next__(self):
+        line = next(self.fd)
+        self.size += len(line)
+        return line.decode(self.encoding)
+
+    def __iter__(self):
+        return self
