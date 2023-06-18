@@ -12,6 +12,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 
+import util
 
 stemmer = SnowballStemmer("english")
 
@@ -49,18 +50,60 @@ class SPIMI:
             else:
                 self.block_dict_temp[term].append(doc_id)
 
-    def build_index(self):
-        os.makedirs(self.temp_dir, exist_ok=True)
+    def build_index(self, filename):
+        # Getting the complete size of the dictionary is expensive, so we
+        # estimate it by the total count of entries for each token
+        n_tuples = 0
+        max_bytes_per_block = 500_000_000
+        bytes_per_tuple = (
+            55  # This is an approximation made by running with some example data
+        )
+        max_tuples_per_block = max_bytes_per_block // bytes_per_tuple
+        n_blocks = 0
 
-        with open(os.path.join(self.data_path, "data.json"), "rb") as data_file:
-            documents = json.load(data_file)
+        term_frequencies = defaultdict(lambda: defaultdict(int))
 
-        for doc_id in documents.keys():
-            self.add_document(doc_id, documents[doc_id])
-            if sys.getsizeof(self.block_dict_temp) > self.block_size:
-                self.flush_block()
-        self.flush_block()
-        self.merge_blocks()
+        os.makedirs("blocks", exist_ok=True)
+
+        def gen_filename_for_block_file(i):
+            return os.path.join("blocks", f"b{i}.blk")
+
+        def write_term_frequencies(term_frequencies, filename):
+            with open(filename, "wb") as fp:
+                block = sorted(
+                    (
+                        (token, dict(docs_dict))
+                        for token, docs_dict in term_frequencies.items()
+                    ),
+                    key=lambda t: t[0],
+                )
+                pickle.dump(block, fp)
+
+        with open(filename, "r") as fp:
+            for i, line in enumerate(fp):
+                j = json.loads(line)
+                abstract = j["abstract"]
+                for t in tokens_for_text(abstract, self.stop_words):
+                    if t not in term_frequencies or i not in term_frequencies[t]:
+                        if n_tuples == max_tuples_per_block:
+                            block_filename = gen_filename_for_block_file(n_blocks)
+                            n_blocks += 1
+
+                            write_term_frequencies(term_frequencies, block_filename)
+
+                            n_tuples = 0
+                            term_frequencies.clear()
+                        else:
+                            n_tuples += 1
+
+                    term_frequencies[t][i] += 1
+
+        if len(term_frequencies) != 0:
+            write_term_frequencies(
+                term_frequencies, gen_filename_for_block_file(n_blocks)
+            )
+
+        return term_frequencies
 
     def flush_block(self):
         sorted_terms = sorted(self.block_dict_temp.keys())
