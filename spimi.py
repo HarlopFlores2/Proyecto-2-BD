@@ -204,6 +204,19 @@ def build_index(filename, stop_words):
     return term_frequencies
 
 
+def offsets_for_json_lines(jsonl_filename):
+    with open(jsonl_filename, "rb") as fp:
+        szrdr = util.SizedReader(fp)
+        offset = 0
+        offsets = []
+
+        for i, row in enumerate(szrdr):
+            offsets.append(offset)
+            offset = szrdr.size
+
+        return offsets
+
+
 class Query:
     __slots__ = "index_file", "offsets", "idfs", "norms"
 
