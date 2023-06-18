@@ -2,10 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Test</title>
+    <title>Resultados</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </head>
 <body>
-    <main>
+    <div class="container">
+        <h1>Resultados de la Búsqueda</h1>
+
+        <!-- Resultados de la base de datos local -->
+        <h2>Resultados del Índice Invertido</h2>
         <section class="resultados-IndexInverted">
             <table>
                 <tr>
@@ -13,26 +19,63 @@
                     <th>PAPER ABSTRACT</th>
                     <th>SCORE</th>
                 </tr>
-                {% set number = namespace(value=1)%}
                 {% for resultado in resultados %}
                 <tr>
                     <td>{{resultado[0]}}</td>
-                    <td>{{data[resultado[0]]}}</td>
+                    <td class="abstract">
+                        <div class="abstract-preview">
+                            {{data[resultado[0]][:100]}}...
+                        </div>
+                        <a href="javascript:void(0);" class="toggle-abstract" data-abstract="{{data[resultado[0]]}}">Ver más</a>
+                    </td>
                     <td>{{resultado[1]}}</td>
                 </tr>
-                {% set number.value = number.value + 1 %}
                 {% endfor %}
             </table>
         </section>
-
         <section class="tiempo">
             <p>Tiempo de ejecución - IndexInverted: {{elapsed_time}} segundos</p>
         </section>
 
-        <section class="botones">
-            <a href="{{url_for('buscador')}}">Volver</a>
+        <!-- Resultados de PostgreSQL -->
+        <h2>Resultados de PostgreSQL</h2>
+        <section class="resultados-PostgreSQL">
+            <table>
+                <tr>
+                    <th>PAPER ID</th>
+                    <th>PAPER ABSTRACT</th>
+                    <th>SCORE</th>
+                </tr>
+                {% for resultado in resultados_sql %}
+                <tr>
+                    <td>{{resultado[0]}}</td>
+                    <td class="abstract">
+                        <div class="abstract-preview">
+                            {{resultado[1][:100]}}...
+                        </div>
+                        <a href="javascript:void(0);" class="toggle-abstract" data-abstract="{{resultado[1]}}">Ver más</a>
+                    </td>
+                    <td>{{resultado[2]}}</td>
+                </tr>
+                {% endfor %}
+            </table>
         </section>
-    </main>
+        <section class="tiempo sql">
+            <p>Tiempo de ejecución - PostgreSQL: {{elapsed_time_sql}} segundos</p>
+        </section>
 
+        <!-- Botones -->
+        <section class="botones">
+            <a href="{{url_for('buscador')}}" class="btn">Volver</a>
+        </section>
+    </div>
+
+    <!-- Modal -->
+    <div id="abstractModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="abstractText"></p>
+        </div>
+    </div>
 </body>
 </html>
