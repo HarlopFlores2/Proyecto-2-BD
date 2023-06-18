@@ -36,6 +36,23 @@ def tokens_for_text(text, stop_words=set()):
     )
 
 
+def create_offsets_for_index(offsets_filename, index_filename):
+    token_offsets = dict()
+    with open(index_filename, "rb") as index_fp:
+        while True:
+            offset = index_fp.tell()
+            try:
+                (token, _) = pickle.load(index_fp)
+            except EOFError:
+                break
+
+            token_offsets[token] = offset
+
+    with open(offsets_filename, "wb") as offsets_fp:
+        pickle.dump(token_offsets, offsets_fp)
+    return token_offsets
+
+
 def merge_blocks_in_dir(result_filename, directory):
     blocks_filenames = glob.glob(os.path.join(directory, "*.blk"))
     merge_blocks(result_filename, blocks_filenames)
