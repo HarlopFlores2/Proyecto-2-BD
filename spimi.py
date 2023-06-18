@@ -1,10 +1,11 @@
+import functools
+import itertools
 import json
 import math
 import os
 import pickle
 import re
 import sys
-import itertools
 from collections import defaultdict
 
 import nltk
@@ -15,9 +16,14 @@ from nltk.stem.snowball import SnowballStemmer
 stemmer = SnowballStemmer("english")
 
 
+@functools.lru_cache(1_000_000)
+def stem(w):
+    return stemmer.stem(w)
+
+
 def tokens_for_text(text, stop_words=set()):
     return (
-        stemmer.stem(w)
+        stem(w)
         for w in (w.casefold() for w in nltk.word_tokenize(text))
         if w not in stop_words
     )
