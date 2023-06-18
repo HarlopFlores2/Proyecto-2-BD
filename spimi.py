@@ -69,6 +69,24 @@ def idfs_for_index(total_documents, index_filename):
     return idf_s
 
 
+def norms_for_index(idfs, index_filename):
+    with open(index_filename, "rb") as index_fp:
+        norms = defaultdict(int)
+        while True:
+            try:
+                (token, tf_s) = pickle.load(index_fp)
+            except EOFError:
+                break
+
+            for doc_id, n_occurrences in tf_s.items():
+                norms[doc_id] += math.log(1 + n_occurrences) * idfs[token]
+
+    for doc_id, total in norms.items():
+        norms[doc_id] = math.sqrt(total)
+
+    return norms
+
+
 def merge_blocks_in_dir(result_filename, directory):
     blocks_filenames = glob.glob(os.path.join(directory, "*.blk"))
     merge_blocks(result_filename, blocks_filenames)
