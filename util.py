@@ -13,6 +13,12 @@ def unpickle_file(filename):
         return pickle.load(fp)
 
 
+def unpickle_file_at_offset(filename, offset):
+    with open(filename, "rb") as fp:
+        fp.seek(offset, 0)
+        return pickle.load(fp)
+
+
 # Based on:
 # https://code.tutsplus.com/tutorials/understand-how-much-memory-your-python-objects-use--cms-25609
 def deep_getsizeof(o, ids=set()):
