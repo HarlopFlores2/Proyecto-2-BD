@@ -22,10 +22,14 @@ def stem(w):
     return stemmer.stem(w)
 
 
+def word_valid(word):
+    return any((c.isalnum() for c in word))
+
+
 def tokens_for_text(text, stop_words=set()):
     return (
         stem(w)
-        for w in (w.casefold() for w in nltk.word_tokenize(text))
+        for w in (w.casefold() for w in nltk.word_tokenize(text) if word_valid(w))
         if w not in stop_words
     )
 
