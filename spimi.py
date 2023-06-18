@@ -17,6 +17,9 @@ from nltk.stem.snowball import SnowballStemmer
 import util
 
 stemmer = SnowballStemmer("english")
+stop_words = set(
+    itertools.chain(stopwords.words("english"), stopwords.words("spanish"))
+)
 
 
 @functools.lru_cache(1_000_000)
