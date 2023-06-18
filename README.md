@@ -47,11 +47,23 @@ La aplicación web utiliza `Flask` para exponer un servidor web en el que los us
 
 ## Frontend: Full-Text Search
 
+El diseño del índice en este proyecto se basa en la utilización de PostgreSQL para almacenar y buscar documentos de texto completo. A través de la librería `SQLAlchemy`, el sistema se conecta a la base de datos `PostgreSQL` y realiza consultas para buscar documentos que coincidan con la consulta del usuario. 
+
+
 ### Screenshots de la Interfaz de Usuario
 
 ![Grafico 1](static/front1.png)
 
 ![Grafico 2](static/front2.png)
+
+En los screenshots anteriores, podemos ver la interfaz de usuario de la aplicación. La primera imagen muestra la pantalla inicial donde los usuarios pueden ingresar sus consultas y especificar cuántos resultados desean ver. La segunda imagen muestra la página de resultados, donde los documentos recuperados se muestran en una tabla junto con sus puntuaciones de relevancia. Se muestran dos conjuntos de resultados, uno para la implementación propia basada en SPIMI y otro para la búsqueda en PostgreSQL. Además, el tiempo de ejecución de cada método se muestra debajo de los resultados correspondientes.
+
+### Código Fuente Relevante
+
+El frontend está construido principalmente con HTML y hace uso de plantillas de Flask para renderizar dinámicamente el contenido. Los archivos `buscador.html` y `resultados.html` contienen la estructura de las páginas de búsqueda y resultados, respectivamente. Estos archivos HTML se comunican con el backend a través de formularios y utilizan estilos CSS y JavaScript para mejorar la interfaz de usuario.
+
+El archivo `app.py` es responsable de iniciar la aplicación Flask y define las rutas que manejan las solicitudes de los usuarios. Utiliza SQLAlchemy para interactuar con PostgreSQL y una implementación personalizada de SPIMI para la recuperación de información basada en un índice invertido.
+
 
 ## Link del video
 
