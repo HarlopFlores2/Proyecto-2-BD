@@ -75,7 +75,7 @@ Para la elaboración del índice en PostgreSQL se utilizo el script SQL adjunto 
 
 ![Grafico 1](static/front1.png)
 
-![Grafico 2](static/front222.png)
+![Grafico 2](static/front2222.png)
 
 ![Grafico 3](static/front33.png)
 
