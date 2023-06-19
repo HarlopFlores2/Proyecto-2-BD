@@ -54,7 +54,9 @@ El diseño del índice en este proyecto se basa en la utilización de PostgreSQL
 
 ![Grafico 1](static/front1.png)
 
-![Grafico 2](static/front2.png)
+![Grafico 2](static/front22.png)
+
+![Grafico 3](static/front33.png)
 
 En los screenshots anteriores, podemos ver la interfaz de usuario de la aplicación. La primera imagen muestra la pantalla inicial donde los usuarios pueden ingresar sus consultas y especificar cuántos resultados desean ver. La segunda imagen muestra la página de resultados, donde los documentos recuperados se muestran en una tabla junto con sus puntuaciones de relevancia. Se muestran dos conjuntos de resultados, uno para la implementación propia basada en SPIMI y otro para la búsqueda en PostgreSQL. Además, el tiempo de ejecución de cada método se muestra debajo de los resultados correspondientes.
 
