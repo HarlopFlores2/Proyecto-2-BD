@@ -54,7 +54,7 @@ El diseño del índice en este proyecto se basa en la utilización de PostgreSQL
 
 ![Grafico 1](static/front1.png)
 
-![Grafico 2](static/front22.png)
+![Grafico 2](static/front222.png)
 
 ![Grafico 3](static/front33.png)
 
