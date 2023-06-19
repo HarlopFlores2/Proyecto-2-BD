@@ -43,11 +43,15 @@ La aplicación web utiliza `Flask` para exponer un servidor web en el que los us
 
 - **Interfaz de Usuario:** La interfaz de usuario está construida con `HTML` y permite a los usuarios ingresar consultas en un cuadro de búsqueda. Los resultados son mostrados en la misma página web.
 
-- **Comunicación entre Backend y Frontend:** Cuando un usuario ingresa una consulta, la aplicación web envía esta consulta al backend a través de una llamada `HTTP`. El backend procesa la consulta utilizando el índice invertido y devuelve los documentos recuperados a la interfaz de usuario para su visualización.
+- **Comunicación entre Backend y Frontend:** Cuando un usuario ingresa una consulta, la aplicación web envía esta consulta al backend a través de una llamada `HTTP`. El backend procesa la consulta utilizando el índice invertido y devuelve los documentos recuperados a la interfaz de usuario para su visualización. Para la elaboración del índice en PostgreSQL se utilizo el script SQL adjunto en el repositorio. Asimismo, para subir los datos a PostgreSQL, se generó un archivo .json (que utiliza como separador un salto de línea) para poblar la tabla papers. La información del archivo son los ids de cada paper junto a su abstract respectivo
 
 ## Frontend: Full-Text Search
 
 El diseño del índice en este proyecto se basa en la utilización de PostgreSQL para almacenar y buscar documentos de texto completo. A través de la librería `SQLAlchemy`, el sistema se conecta a la base de datos `PostgreSQL` y realiza consultas para buscar documentos que coincidan con la consulta del usuario. 
+
+### Integración con PostgreSQL
+
+Para la elaboración del índice en PostgreSQL se utilizo el script SQL adjunto en el repositorio. Asimismo, para subir los datos a PostgreSQL, se generó un archivo .json (que utiliza como separador un salto de línea) para poblar la tabla papers. La información del archivo son los ids de cada paper junto a su abstract respectivo
 
 
 ### Screenshots de la Interfaz de Usuario
