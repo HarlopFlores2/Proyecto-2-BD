@@ -3,8 +3,25 @@
 ## Introducción
 Este proyecto tiene como objetivo entender y aplicar algoritmos de búsqueda y recuperación de información basados en el contenido, enfocándose en la construcción óptima de un Índice Invertido para tareas de búsqueda y recuperación en documentos de texto.
 
-## Dataset
-Se utilizó el siguiente dataset: [arXiv Dataset](https://www.kaggle.com/datasets/Cornell-University/arxiv).
+### Descripción del dominio de datos a usar
+Este proyecto utiliza un conjunto de datos denominado "ArXiv Metadata", proporcionado por Cornell University y disponible en [Kaggle](https://www.kaggle.com/datasets/Cornell-University/arxiv). 
+
+ArXiv es un repositorio en línea de preimpresiones de artículos científicos en los campos de matemáticas, física, ciencias de la computación, biología cuantitativa, estadísticas y otros. Es ampliamente utilizado por la comunidad académica para compartir investigaciones y hallazgos antes de que sean formalmente publicados. 
+
+Este conjunto de datos es un reflejo del conjunto de datos original de ArXiv, y debido a su gran tamaño (1.1TB y en crecimiento), solo proporciona un archivo de metadatos en formato JSON. El archivo contiene una entrada para cada artículo, con los siguientes campos:
+
+- **id:** ID de ArXiv (puede ser usado para acceder al artículo).
+- **submitter:** Persona o entidad que envió el artículo.
+- **authors:** Autores del artículo.
+- **title:** Título del artículo.
+- **comments:** Información adicional, como el número de páginas y figuras.
+- **journal-ref:** Información sobre la revista en la que se publicó el artículo.
+- **doi:** Identificador de Objeto Digital ([Digital Object Identifier](https://www.doi.org)).
+- **abstract:** Resumen del artículo.
+- **categories:** Categorías / etiquetas en el sistema ArXiv.
+- **versions:** Historial de versiones.
+
+En este proyecto, nos centraremos en los campos id y abstract.
 
 ## Backend: Implementación del Índice Invertido
 
